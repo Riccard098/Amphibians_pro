@@ -42,12 +42,6 @@ glimpse(Dataset_amph)
 New_Dataset_amph <- Dataset_amph[,c(-6, -7, -8, -9, -11, -12)]
 View(New_Dataset_amph)
 
-New_Dataset_amph_cleaned <- New_Dataset_amph %>% 
-  select(Cate= 'Motorway' ,
-         Categorical...5 = 'Tipo_di_serbatoio_idrico')
-
-
-
 
 colnames(New_Dataset_amph) <- c("ID",
                                 "Motorway",
@@ -72,8 +66,21 @@ New_Dataset_amph <- New_Dataset_amph[-1,]
 head(New_Dataset_amph)
 
 view(New_Dataset_amph)
-# codice raffo 
-#commento 
+
+#Abbiamo convertito le variabili da dati qualitativi a quantitativi, in questo caso avevamo bisogno dei range in metri
+#delle strade 
+New_Dataset_amph["Distanza_serbatoio-strade"][New_Dataset_amph["Distanza_serbatoio-strade"] == 0] <- "<50 m"
+New_Dataset_amph["Distanza_serbatoio-strade"][New_Dataset_amph["Distanza_serbatoio-strade"] == 1] <- "50-100 m"
+New_Dataset_amph["Distanza_serbatoio-strade"][New_Dataset_amph["Distanza_serbatoio-strade"] == 2] <- "100-200 m"
+New_Dataset_amph["Distanza_serbatoio-strade"][New_Dataset_amph["Distanza_serbatoio-strade"] == 5] <- "200-500 m"
+New_Dataset_amph["Distanza_serbatoio-strade"][New_Dataset_amph["Distanza_serbatoio-strade"] == 9] <- "500-1000 m"
+New_Dataset_amph["Distanza_serbatoio-strade"][New_Dataset_amph["Distanza_serbatoio-strade"] == 10] <- ">1000 m"
+
+glimpse(New_Dataset_amph)
+view(New_Dataset_amph)
+
+
+#La colonna della superficie del serbatoio idrico ora non è più un character ma è stata modificata in numeric  
 New_Dataset_amph <- New_Dataset_amph %>%
   mutate(
     `Superficie_serbatoio_idrico_(m2)` = as.numeric(`Superficie_serbatoio_idrico_(m2)`)
@@ -96,5 +103,4 @@ table(New_Dataset_amph$`Common newt`)
 table(New_Dataset_amph$`Great crested newt`)
 #La più frequente è "Brown Frog" e la meno frequente "Great crested newt" 
 
-Brown_frogs<- 148
-cor(New_Dataset_amph$`Brown frogs`, New_Dataset_amph$`Distanza serbatoio-strade`)
+
