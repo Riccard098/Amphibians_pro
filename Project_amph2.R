@@ -4,22 +4,21 @@
 #Amphibians Data Set: è una raccolta di informazioni sulla dimensione della popolazione di anfibi
 #da inventari naturalistici fatti appositamente per la redazione di VIA (Valutazione Impatto Ambientale)
 #per due progetti stradali pianificati in Polonia (strada A e strada B) con 189 siti di occorenza. 
-#abbiamo scelto questo dataset in quanto ci interesserebbe capire la correlazione tra ecc ecc 
+#Abbiamo scelto questo dataset in quanto ci interesserebbe capire come varia la presenza di fattori biotici (le specie di anfibi) rispetto ad alcuni fattori abiotici (strade e serbatori).
 
+#libraries
 library(ggplot2)
 library(GGally)
 library(tidyverse)
 library(readxl)
 
 #1 DATASET----
+#Il dataset è stato preso da Kaggle : https://www.kaggle.com/datasets/ishandutta/amphibians-data-set
 #In questo dataset abbiamo 190 righe (osservazioni) e 23 colonne (variabili)
-#Inoltre abbiamo sia componenti biotiche (vegetazione e specie di anfibi) che abiotiche(numero di serbatoi, riserve idriche ecc...)
-
 
 dataset_amph <- read_xlsx("data/amphibians.xlsx")
 
-
-#guardiamo il nostro dataset 
+#Ispezioniamo il nostro dataset 
 view(dataset_amph)
 
 dim(dataset_amph)
@@ -34,10 +33,27 @@ names(dataset_amph)
 
 glimpse(dataset_amph)
 
+#Nellaprima colonna ci sono le osservazioni, la seconda colonna è il tipo di strada/autostrada,
+#la terza colonna rappresenta la superficie dei serbatoi ed è in m2, ci sarà molto utile per la nostra analisi,
+#la quarta colonna è il numero di serbatoi/habitat e maggiore è il numero di serbatoi, più è probabile che alcuni di essi siano adatti alla riproduzione di anfibi.
+#Nella quinta colonna sono presenti i tipi di serbatoi (invasi, bacini, stagni, valli, torrenti, paludi ecc)
+#Per quanto riguarda la sesta colonna possiamo vedere i vari utilizzi delle riserve idriche,
+#nella settima colonna abbiamo la distanza serbatoio-strade in range numerici, utile per il nostro studio in quanto ci permette di vedere come lem specie siano più o meno influenzate dalla vicinanza con le strade 
+#Nell'ottava invece, abbiamo la distanza serbatoio-edifici,
+#Stato serbatoio nella nona colonna riguarda lo stato di manutenzione dell'invaso,
+#Nella decima abbiamo la tipologia di riva (se naturale o antropica),
+#Nelle ultime colonne (dalla 11esima alla 17esima) abbiamo in ordine le specie presenti : 
+#Green frogs = Rana verde,
+#Brown frogs = Rana marrone,
+#Common toad = Rospo comune
+#Fire-bellied toad = Ululone dal ventre rosso,
+#Tree frog = Raganella, 
+#Common newt = Tritone comune, 
+#Great crested newt = Tritone crestato maggiore. 
+
 
 #2 DATA CLEANING----
-#Abbiamo elimianto le colonne non utili al nostro tipo di studio, in seguito abbiamo rinominato
-#delle colonne. 
+#Abbiamo elimianto le colonne non utili al nostro tipo di studio e ne abbiamo rinominate altre.
 #Vedendo poi che la riga "ID" era uguale ai nomi delle varie colonne abbiamo deciso di eliminarla.
 new_dataset_amph <- dataset_amph[,c(-6, -7, -8, -9, -11, -12)]
 view(new_dataset_amph)
@@ -92,7 +108,7 @@ new_dataset_amph <- new_dataset_amph %>%
   )
 glimpse(new_dataset_amph)
 
-#creo colonna con la somma delle specie osservate in ogni riga
+#creiamo una nuova colonna con la somma delle specie osservate in ogni riga
 
 new_dataset_amph$tot_species <- rowSums(new_dataset_amph[,11:ncol(new_dataset_amph)])
 
@@ -173,6 +189,16 @@ gcnd %>%
             sd = sd(estensione_serb_mq),
             min = min(estensione_serb_mq),
             max = max(estensione_serb_mq))
+
+
+
+
+
+
+
+
+
+
 
 
 
