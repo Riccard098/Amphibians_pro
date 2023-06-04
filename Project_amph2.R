@@ -33,7 +33,7 @@ names(dataset_amph)
 
 glimpse(dataset_amph)
 
-#Nellaprima colonna ci sono le osservazioni, la seconda colonna è il tipo di strada/autostrada,
+#Nellaprima colonna ci sono le osservazioni, la seconda colonna è il tipo di strada/autostrada (fondamentale per la nostra analisi),
 #la terza colonna rappresenta la superficie dei serbatoi ed è in m2, ci sarà molto utile per la nostra analisi,
 #la quarta colonna è il numero di serbatoi/habitat e maggiore è il numero di serbatoi, più è probabile che alcuni di essi siano adatti alla riproduzione di anfibi.
 #Nella quinta colonna sono presenti i tipi di serbatoi (invasi, bacini, stagni, valli, torrenti, paludi ecc)
@@ -42,8 +42,9 @@ glimpse(dataset_amph)
 #Nell'ottava invece, abbiamo la distanza serbatoio-edifici,
 #Stato serbatoio nella nona colonna riguarda lo stato di manutenzione dell'invaso,
 #Nella decima abbiamo la tipologia di riva (se naturale o antropica),
-#Nelle ultime colonne (dalla 11esima alla 17esima) abbiamo in ordine le specie presenti : 
-#Green frogs = Rana verde,
+#Nelle ultime colonne (dalla 11esima alla 17esima) abbiamo in ordine le specie e in ogni colonna
+#sono presenti due valori (variabili dicotomiche) : 0 o 1 che indicano la presenza (1) o l'assenza (0) di quella determinata specie.
+#Green frogs = Rana verde, 
 #Brown frogs = Rana marrone,
 #Common toad = Rospo comune
 #Fire-bellied toad = Ululone dal ventre rosso,
@@ -76,13 +77,19 @@ colnames(new_dataset_amph) <- c("ID",
                                 "common_newt",
                                 "great_crested_newt")
 
-new_dataset_amph <- new_dataset_amph[-1,]
+
+#Eliminiamo altre colonne non usate nella nostra analisi 
+new_dataset_amph <- new_dataset_amph[-1, -10]
 
 head(new_dataset_amph)
 
 glimpse(new_dataset_amph)
 
 view(new_dataset_amph)
+
+ 
+
+
 
 #rendo numeriche le colonne dalla 11 alla fine (quelle delle specie di anfibi)
 new_dataset_amph$green_frogs <- as.numeric(new_dataset_amph$green_frogs)
@@ -125,23 +132,19 @@ dataset_motorwayS52 <- new_dataset_amph[new_dataset_amph$motorway == "S52",]
 
 table(dataset_motorwayS52$tot_species)
 
-#consiglio mio fate grafici qui, questi sarebbero utili
 #dai risultati sembra che ci siano più specie nei pressi dell'autostrada S52, ci siamo chiesti se questa differenza fosse statisticamente significativa
-#test chi quadro
-#poniamo come ipotesi nulla H0 che il tipo di autostrada non influenzi il numero di specie presenti e come ipotesi alternativa H1 che il numero di specie osservate sia dipendente da quale autostrada osserviamo
 
 
 #3 DATA ANALYSIS----
 
-#test chi quadro
+#test t test
 #poniamo come ipotesi nulla H0 che il tipo di autostrada non influenzi il numero di specie presenti e come ipotesi alternativa H1 che il numero di specie osservate sia dipendente da quale autostrada osserviamo
+ttest_motorway_totspecies <- t.test(tot_species ~ motorway, data = new_dataset_amph)
+ttest_motorway_totspecies
+#p-value = 8.656e-06, rifiutiamo l'ipotesi nulla che non ci sia relazione tra l'autostrada osservata e il numero di specie per una alfa = 1
 
-chi_sq_test_motorway_totspecies <- chisq.test(table(new_dataset_amph$motorway, new_dataset_amph$tot_species))
-chi_sq_test_motorway_totspecies
 
-#pvalue = 0,0004834, rifiutiamo l'ipotesi nulla che non ci sia relazione tra l'autostrada osservata e il numero di specie per una alfa = 1
-
-#Ora vedremo qual è la specie con occorenza maggiore e quella con occorenza minore
+#Ora vedremo qual è la specie con occorenza maggiore e quella con occorenza minore, cioè quale specie compare di più e quale meno 
 table(new_dataset_amph$`green_frogs`)
 table(new_dataset_amph$`brown_frogs`)
 table(new_dataset_amph$`common_toad`)
@@ -149,11 +152,6 @@ table(new_dataset_amph$`fire-bellied_toad`)
 table(new_dataset_amph$`tree_frog`)
 table(new_dataset_amph$`common_newt`)
 table(new_dataset_amph$`great_crested_newt`)
-#La più frequente è "Brown Frog" e la meno frequente "Great crested newt" 
-
-#vogliamo fare test di ipotesi grandezza serbatorio - numero di specie 
-#distanza autostrada con occorrenze 
-#se il serb è naturale o artificiale cambia il numero di specie? tipo serb = quali specie 
 
 
 # Creazione del database con tutte le osservazioni in cui Brown frogs sono presenti
@@ -189,6 +187,55 @@ gcnd %>%
             sd = sd(estensione_serb_mq),
             min = min(estensione_serb_mq),
             max = max(estensione_serb_mq))
+
+#4 DATA VISUALIZATION----
+#Vogliamo vedere graficamente le occorrenze delle specie 
+specie_occorrenza
+
+#Vediamo con un boxplot com'è la relazione tra il numero delle specie e il tipo di autostrada 
+n_specie_autostrada <- ggplot() + geom_boxplot(aes(x= new_dataset_amph$motorway, y= new_dataset_amph$tot_species)) +
+  labs(x = "Motorway",
+       y = "Tot Species")
+n_specie_autostrada
+
+#Ora salviamo il grafico 
+pdf("n_specie_autostrada.pdf")
+plot(n_specie_autostrada)
+dev.off()
+
+
+#facciamo uno scatterplot per vedere tot species - estensione serb mq
+scatter_plot <- plot(new_dataset_amph$tot_species, new_dataset_amph$estensione_serb_mq, 
+     xlab = "Estensione serbatoio (mq)", ylab = "Totale specie")
+
+#Salvo lo scatterplot
+pdf("scatterplot.pdf")
+plot(scatter_plot)
+dev.off()
+
+
+#test di correlazione
+#Indaghiamo la possibile correlazione tra la grandezza dei serbatoi e il numero di specie presenti utilizzando il test di correlazione di pearson
+#Ho non c'è correlazione lineare tra le variabili
+#H1 c'è correlazione lineare tra le variabili
+cor_pearson <- cor.test(new_dataset_amph$estensione_serb_mq, new_dataset_amph$tot_species, method = "pearson")
+cor_pearson
+#p-value = 0.002263, dobbiamo rifiutare l'ipotesi nulla, esiste una relazione lineare tra le variabili tot species e la grandezza del serbatoio
+
+#Ora facciamo un grafico per vedere : specie e tipo di serbatoio
+ggplot(new_dataset_amph, aes(x = tipo_serbatoio, y = tot_species)) +
+      geom_col(position = "dodge", fill = "steelblue") +
+       stat_summary(fun = "mean", geom = "point", color = "red", size = 3) +
+       labs(x = "Tipo di serbatoio", y = "Media del numero di specie") +
+       ggtitle("Numero di specie per tipo di serbatoio")
+
+#Dal grafico sembra che in diversi tipi di serbatoi siano presenti numeri diversi di specie. 
+#Studiamo questa relazione con un test di kruskal wallis
+kruskal.test(tot_species ~ tipo_serbatoio, data = new_dataset_amph)
+
+#p-value = 1.709e-06 le differenze per tipo di serbatoio sono significative il che significa che a seconda del tipo di serbatoio abbiamo numeri di specie diverse
+#commentare questo 
+
 
 
 
