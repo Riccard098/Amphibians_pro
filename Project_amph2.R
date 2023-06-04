@@ -1,3 +1,7 @@
+
+
+
+
 #Biometria e Statistica Modulo 2 
 #Progetto di Luisa Costantini, Eleonora Pancaldi e Riccardo Biagini 
 
@@ -56,19 +60,14 @@ glimpse(dataset_amph)
 #2 DATA CLEANING----
 #Abbiamo elimianto le colonne non utili al nostro tipo di studio e ne abbiamo rinominate altre.
 #Vedendo poi che la riga "ID" era uguale ai nomi delle varie colonne abbiamo deciso di eliminarla.
-new_dataset_amph <- dataset_amph[,c(-6, -7, -8, -9, -11, -12)]
+new_dataset_amph <- dataset_amph[,c(-6, -7, -8, -9,-10, -11, -12, -14, -15, -16, -4)]
 view(new_dataset_amph)
 
 colnames(new_dataset_amph) <- c("ID",
                                 "motorway",
                                 "estensione_serb_mq",
-                                "mumero_serb/habitat",
                                 "tipo_serbatoio",
-                                "utilizzo_riserve_idriche",
                                 "dist_serb_strade",
-                                "dist_serb_edifici",
-                                "stato_serb",
-                                "tipolo_riva",
                                 "green_frogs",
                                 "brown_frogs",
                                 "common_toad",
@@ -78,19 +77,15 @@ colnames(new_dataset_amph) <- c("ID",
                                 "great_crested_newt")
 
 
-#Eliminiamo altre colonne non usate nella nostra analisi 
-new_dataset_amph <- new_dataset_amph[-1, -10]
-
 head(new_dataset_amph)
 
 glimpse(new_dataset_amph)
 
 view(new_dataset_amph)
 
+#Eliminiamo la prima riga contentente le sigle ora non più necessarie 
+new_dataset_amph <- new_dataset_amph[-1,]
  
-
-
-
 #rendo numeriche le colonne dalla 11 alla fine (quelle delle specie di anfibi)
 new_dataset_amph$green_frogs <- as.numeric(new_dataset_amph$green_frogs)
 
@@ -117,7 +112,7 @@ glimpse(new_dataset_amph)
 
 #creiamo una nuova colonna con la somma delle specie osservate in ogni riga
 
-new_dataset_amph$tot_species <- rowSums(new_dataset_amph[,11:ncol(new_dataset_amph)])
+new_dataset_amph$tot_species <- rowSums(new_dataset_amph[,6:ncol(new_dataset_amph)])
 
 glimpse(new_dataset_amph)
  
@@ -129,6 +124,7 @@ autostradedataset_motorwayA1 <- new_dataset_amph[new_dataset_amph$motorway == "A
 table(autostradedataset_motorwayA1$tot_species)
 
 dataset_motorwayS52 <- new_dataset_amph[new_dataset_amph$motorway == "S52",]
+
 
 table(dataset_motorwayS52$tot_species)
 
@@ -188,9 +184,34 @@ gcnd %>%
             min = min(estensione_serb_mq),
             max = max(estensione_serb_mq))
 
+
+
 #4 DATA VISUALIZATION----
-#Vogliamo vedere graficamente le occorrenze delle specie 
+#Vogliamo vedere graficamente le occorrenze delle specie perciò creiamo un dataframe dedicato in cui riportiamo le specie e le relative occorrenze 
+
+valori <- c(108, 148, 124, 58, 71, 58, 21)
+nomi <- c("green_frogs",
+       "brown_frogs",
+       "common_toad",
+       "fire-bellied_toad",
+       "tree_frog",
+       "common_newt",
+       "great_crested_newt")
+df_secondario <- data.frame(occorrenza=valori, specie=nomi)
+
+
+data_bar <- df_secondario$occorrenza
+names(data_bar) <- df_secondario$specie
+data_bar
+
+specie_occorrenza <- ggplot() +  barplot(data_bar)
+
 specie_occorrenza
+
+#Salviamo il barplot 
+pdf("specie_occorrenza.pdf")
+plot(specie_occorrenza)
+dev.off()
 
 #Vediamo con un boxplot com'è la relazione tra il numero delle specie e il tipo di autostrada 
 n_specie_autostrada <- ggplot() + geom_boxplot(aes(x= new_dataset_amph$motorway, y= new_dataset_amph$tot_species)) +
@@ -204,7 +225,7 @@ plot(n_specie_autostrada)
 dev.off()
 
 
-#facciamo uno scatterplot per vedere tot species - estensione serb mq
+#facciamo uno scatterplot per vedere la distribuzione del tot species in funzione dell'estensione serbatoio espresso in mq
 scatter_plot <- plot(new_dataset_amph$tot_species, new_dataset_amph$estensione_serb_mq, 
      xlab = "Estensione serbatoio (mq)", ylab = "Totale specie")
 
@@ -216,8 +237,8 @@ dev.off()
 
 #test di correlazione
 #Indaghiamo la possibile correlazione tra la grandezza dei serbatoi e il numero di specie presenti utilizzando il test di correlazione di pearson
-#Ho non c'è correlazione lineare tra le variabili
-#H1 c'è correlazione lineare tra le variabili
+#Ipotesi nulla: Ho -> non c'è correlazione lineare tra le variabili
+#Ipotesi alternativa H1 : c'è correlazione lineare tra le variabili
 cor_pearson <- cor.test(new_dataset_amph$estensione_serb_mq, new_dataset_amph$tot_species, method = "pearson")
 cor_pearson
 #p-value = 0.002263, dobbiamo rifiutare l'ipotesi nulla, esiste una relazione lineare tra le variabili tot species e la grandezza del serbatoio
@@ -230,13 +251,27 @@ ggplot(new_dataset_amph, aes(x = tipo_serbatoio, y = tot_species)) +
        ggtitle("Numero di specie per tipo di serbatoio")
 
 #Dal grafico sembra che in diversi tipi di serbatoi siano presenti numeri diversi di specie. 
+#In particolare: 
+#1 = serbatoio naturale, con media 3~ 
+#11 = fossi con media 2,6~
+#12 = prati umidi (paludi) con media 1,8~
+#14 = valli fluviali con media 2,6~
+#15 = piccoli corsi d'acqua con media 1,3~
+#2 = invasi di recente formazione, non sottoposti a naturalizzazione con media 1,6~ 
+#5 = serbatoi d'acqua tecnologica con media 1,9~
+#7 = giardini/serbatoi d'acqua negli orti con media 6.
+#A giudicare dai risultati assumiamo che le specie preferiscano serbatoio che si trovano in giardini/orti 
+# o in serbatoi naturali.
+
 #Studiamo questa relazione con un test di kruskal wallis
 kruskal.test(tot_species ~ tipo_serbatoio, data = new_dataset_amph)
 
 #p-value = 1.709e-06 le differenze per tipo di serbatoio sono significative il che significa che a seconda del tipo di serbatoio abbiamo numeri di specie diverse
-#commentare questo 
+#H0 ipotesi nulla = non c'è relazione tra tipo di serbatoio e il numero di specie
+#H1 ipotesi alternativa = c'è relazione tra tipo di serbatoio e il numero di specie 
 
-
+#Concludendo da quanto osservato nelle nostre analisi; possiamo affermare che è effettivamente presente 
+# una relazione tra le componenti biotiche (specie anfibi) e abiotiche (tipologia strada, tipo di serbatoio, distanza serbatoio-strade, estensione del serbatoio).
 
 
 
